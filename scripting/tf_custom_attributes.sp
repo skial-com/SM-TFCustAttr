@@ -25,6 +25,8 @@ public Plugin myinfo = {
 
 Handle g_OnAttributeKVAdded;
 
+// Every KeyValues handle stored on an entity, each listed once.  Handles are only deleted by
+// EraseAttributeStructure(), so membership here is what makes a stored handle valid.
 ArrayList g_AttributeKVRefs;
 
 public APLRes AskPluginLoad2(Handle self, bool late, char[] error, int maxlen) {
@@ -133,14 +135,11 @@ public Action GarbageCollectAttribute(Handle timer) {
 			continue;
 		}
 		
-		KeyValues kv = GetCustomAttributeStruct(entity, .validate = false);
-		if (kv) {
+		// only keep handles we're tracking; an entity may share one with another entity
+		KeyValues kv = GetCustomAttributeStruct(entity, .validate = true);
+		if (kv && savedAttributes.FindValue(kv) == -1) {
 			savedAttributes.Push(kv);
-			
-			int index;
-			while ((index = g_AttributeKVRefs.FindValue(kv)) != -1) {
-				g_AttributeKVRefs.Erase(index);
-			}
+			g_AttributeKVRefs.Erase(g_AttributeKVRefs.FindValue(kv));
 		}
 	}
 	
@@ -161,7 +160,7 @@ KeyValues GetCustomAttributeStruct(int entity, bool validate) {
 	Address pCustomAttr = TF2Attrib_GetByDefIndex(entity, ATTRID_CUSTOM_STORAGE);
 	if (pCustomAttr != Address_Null) {
 		KeyValues kv = view_as<KeyValues>(TF2Attrib_GetValue(pCustomAttr));
-		if (!validate || IsValidHandle(kv)) {
+		if (!validate || IsTrackedAttributeStruct(kv)) {
 			return kv;
 		}
 	}
@@ -328,7 +327,17 @@ KeyValues InitAttributeRuntimeStruct(int entity) {
  */
 void SetCustomAttributeStruct(int entity, KeyValues kv) {
 	TF2Attrib_SetByDefIndex(entity, ATTRID_CUSTOM_STORAGE, view_as<float>(kv));
-	g_AttributeKVRefs.Push(kv);
+	if (!IsTrackedAttributeStruct(kv)) {
+		g_AttributeKVRefs.Push(kv);
+	}
+}
+
+/**
+ * Returns true if the handle is one of ours that hasn't been deleted yet.  Stored handles can go
+ * stale (and their values reused), so this is used instead of checking the handle itself.
+ */
+bool IsTrackedAttributeStruct(KeyValues kv) {
+	return kv && g_AttributeKVRefs.FindValue(kv) != -1;
 }
 
 stock void KvSweepEmptyKeys(KeyValues kv) {
@@ -353,10 +362,7 @@ stock void KvSweepEmptyKeys(KeyValues kv) {
 void EraseAttributeStructure() {
 	for (int i = 0; i < g_AttributeKVRefs.Length; i++) {
 		KeyValues kv = g_AttributeKVRefs.Get(i);
-		
-		if (IsValidHandle(kv)) {
-			delete kv;
-		}
+		delete kv;
 	}
 	g_AttributeKVRefs.Clear();
 }
