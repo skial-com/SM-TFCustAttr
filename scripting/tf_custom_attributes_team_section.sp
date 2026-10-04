@@ -69,6 +69,7 @@ Action OnPlayerLoadoutUpdated(UserMsg msg_id, BfRead msg, const int[] players,
 		
 		OnEconItemEquipPre(client, wearable);
 	}
+	return Plugin_Continue;
 }
 
 Action OnEconItemEquipPre(int client, int weapon) {

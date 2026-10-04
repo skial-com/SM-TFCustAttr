@@ -246,6 +246,7 @@ public int Native_SetAttributeValueInt(Handle caller, int argc) {
 	
 	int value = GetNativeCell(3);
 	kv.SetNum(attr, value);
+	return 0;
 }
 
 public int Native_SetAttributeValueFloat(Handle caller, int argc) {
@@ -260,6 +261,7 @@ public int Native_SetAttributeValueFloat(Handle caller, int argc) {
 	
 	float value = GetNativeCell(3);
 	kv.SetFloat(attr, value);
+	return 0;
 }
 
 public int Native_SetAttributeValueString(Handle caller, int argc) {
@@ -278,6 +280,7 @@ public int Native_SetAttributeValueString(Handle caller, int argc) {
 	GetNativeString(3, buf, len);
 	
 	kv.SetString(attr, buf);
+	return 0;
 }
 
 /**

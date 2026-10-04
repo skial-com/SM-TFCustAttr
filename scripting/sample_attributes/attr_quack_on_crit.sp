@@ -18,4 +18,5 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponName
 	if (TF2CustAttr_GetInt(weapon, "quack on crit check")) {
 		EmitGameSoundToClient(client, "Halloween.Quack");
 	}
+	return Plugin_Continue;
 }
